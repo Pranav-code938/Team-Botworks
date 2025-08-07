@@ -1,0 +1,123 @@
+// Sensor pins
+const int irSensor1 = A0;
+const int irSensor2 = A1;
+
+// Motor A pins (Left Motor)
+const int PWMA = 3;
+const int AIN1 = 4;
+const int AIN2 = 5;
+
+// Motor B pins (Right Motor)
+const int PWMB = 6;
+const int BIN1 = 7;
+const int BIN2 = 8;
+
+// Standby pin
+const int STBY = 9;
+
+// Threshold for IR sensors
+const int threshold = 500;
+
+void setup() {
+  // Initialize serial monitor
+  Serial.begin(9600);
+
+  // Set sensor pins as input (optional since analogRead handles this)
+  pinMode(irSensor1, INPUT);
+  pinMode(irSensor2, INPUT);
+
+  // Motor control pins
+  pinMode(PWMA, OUTPUT);
+  pinMode(AIN1, OUTPUT);
+  pinMode(AIN2, OUTPUT);
+
+  pinMode(PWMB, OUTPUT);
+  pinMode(BIN1, OUTPUT);
+  pinMode(BIN2, OUTPUT);
+
+  // Standby
+  pinMode(STBY, OUTPUT);
+  digitalWrite(STBY, HIGH);  // Enable motor driver
+}
+
+void loop() {
+  // Read sensor values
+  int leftSensor = analogRead(irSensor1);
+  int rightSensor = analogRead(irSensor2);
+
+  // Display readings
+  Serial.print("Sensor Left (A0): ");
+  Serial.print(leftSensor);
+  Serial.print(" | Sensor Right (A1): ");
+  Serial.print(rightSensor);
+  Serial.print(" || ");
+
+  // Movement logic
+  if (leftSensor < threshold && rightSensor < threshold) {
+    // Both on black line - move forward
+    moveForward();
+    Serial.println("Motors: FORWARD");
+  } else if (leftSensor < threshold && rightSensor > threshold) {
+    // Left on black, right on white - turn right
+    turnRight();
+    Serial.println("Motors: TURN RIGHT");
+  } else if (leftSensor > threshold && rightSensor < threshold) {
+    // Right on black, left on white - turn left
+    turnLeft();
+    Serial.println("Motors: TURN LEFT");
+  } else {
+    // Both on white - stop
+    stopMotors();
+    Serial.println("Motors: STOP");
+  }
+
+  delay(100); // Small delay for stability
+}
+
+// Motor control functions
+
+void moveForward() {
+  // Motor A
+  digitalWrite(AIN1, HIGH);
+  digitalWrite(AIN2, LOW);
+  analogWrite(PWMA, 200);  // Adjust speed if needed
+
+  // Motor B
+  digitalWrite(BIN1, HIGH);
+  digitalWrite(BIN2, LOW);
+  analogWrite(PWMB, 200);
+}
+
+void turnRight() {
+  // Motor A stop
+  digitalWrite(AIN1, LOW);
+  digitalWrite(AIN2, LOW);
+  analogWrite(PWMA, 0);
+
+  // Motor B forward
+  digitalWrite(BIN1, HIGH);
+  digitalWrite(BIN2, LOW);
+  analogWrite(PWMB, 200);
+}
+
+void turnLeft() {
+  // Motor A forward
+  digitalWrite(AIN1, HIGH);
+  digitalWrite(AIN2, LOW);
+  analogWrite(PWMA, 200);
+
+  // Motor B stop
+  digitalWrite(BIN1, LOW);
+  digitalWrite(BIN2, LOW);
+  analogWrite(PWMB, 0);
+}
+
+void stopMotors() {
+  digitalWrite(AIN1, LOW);
+  digitalWrite(AIN2, LOW);
+  analogWrite(PWMA, 0);
+
+  digitalWrite(BIN1, LOW);
+  digitalWrite(BIN2, LOW);
+  analogWrite(PWMB, 0);
+}
